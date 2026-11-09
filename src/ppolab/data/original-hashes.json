@@ -1,0 +1,17 @@
+{
+  "assets/cartpole_demo.gif": "819927e19370fb41a94be24e409ba6af7db165756656d7cd85c04608f0474eb4",
+  "assets/learning_curve.png": "21dd20c6e7dec99ead0ada245e14bf55f8b04192c90220d40b2d9e5ed8628deb",
+  "assets/policy.npz": "e71b04cef362bb5fe917448c1f730794b72ae092499c05db2f98cafdb1353f94",
+  "assets/results.json": "ff6e2d6b9aefe143e9ceaa8a26c5c1a22731c9bca9e3b22e7055e16d36495f6c",
+  "src/ppolab/__init__.py": "55f16eb9512ec4cc4547f25140c3bd817c65867a3efff062e8d9aef54364cbb4",
+  "src/ppolab/cartpole.py": "4391a54546c59f75b9e7343cfe0b5b9ab5a16852d853207f9f9ff1aef97d7192",
+  "src/ppolab/nets.py": "f675346156995cc56a4971abd6dbcbf8d22a9c56402e7556ec4b924ca9c936e9",
+  "src/ppolab/optim.py": "3378d5e56a182deb98ae74a41aa71b194269528e5e085527925a9586ebd59d32",
+  "src/ppolab/ppo.py": "a93c79c176d7e51b2c7f6a01baae8fada9e42a069ca83142f6dbe2f6b30b0388",
+  "src/ppolab/train.py": "fc4461e46ff4d9c239cdd1d354e211d74a8345dfb5d20f58cc89a669fa95318a",
+  "tests/test_cartpole.py": "ec641c0f4c209405cbd7597fd1a9cd7dba0bb3d6658b7d681ccb3b68b1879101",
+  "tests/test_gae.py": "e9c66fc0ca88d9b89c4631f22cb19ee735324b99892100eae10d72de7fbde0a6",
+  "tests/test_optim.py": "fb26308ff6339598ce909b5533653ccf9e39639b316029a1c814797649f76e90",
+  "tests/test_policy.py": "1c399dd327d33b4db955d195c6de6995234db52a25687c4632876584580154e1",
+  "tests/test_ppo.py": "e192f105b2adfa97e0273723e3d0c9094a091dd19089ce96c0d02cc72c9565b4"
+}

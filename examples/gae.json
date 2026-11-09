@@ -1,0 +1,30 @@
+{
+  "gamma": 0.9,
+  "lam": 0.8,
+  "next_values": [
+    3,
+    7,
+    4
+  ],
+  "rewards": [
+    1,
+    1,
+    100
+  ],
+  "tail_value": 4,
+  "terminated": [
+    false,
+    false,
+    false
+  ],
+  "truncated": [
+    false,
+    true,
+    false
+  ],
+  "values": [
+    2,
+    3,
+    50
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "episodes": 30,
+  "original_steps": 14871,
+  "one_step_max_normalized_error": 1.0080922002054549e-15,
+  "fixed_observation_action_disagreements": 0,
+  "free_path_action_disagreements": 377,
+  "free_path_max_absolute_state_difference": 0.5933701368510604,
+  "free_path_return_length_disagreements": 0,
+  "node": "v22.23.4",
+  "note": "Measured reference, not a bitwise or trajectory-equivalence contract. NumPy/BLAS and JS math/reduction differences accumulate in free-running dynamics."
+}

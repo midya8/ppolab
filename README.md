@@ -45,3 +45,52 @@ Most from-scratch PPO write-ups stop at "it works". This repo makes the parts th
 ## License
 
 MIT
+
+## v0.2: boundary fix and independent browser audit
+
+The [live boundary inspector](https://midya8.github.io/ppolab/) computes the
+entire shipped network and CartPole physics in scalar JavaScript. Replay all
+30 original evaluation/gate initial states, inspect every step, or enter a
+new state. These are newly computed scalar paths, not exact original NumPy
+trajectories. Tight one-step checks do not imply matching long paths: the
+reference run differed on 377 of 14,871 actions despite matching all 30 return
+lengths. That divergence is reported, not suppressed or hidden behind a GIF.
+
+The actual training collector had an internal-reset bug: time-limit truncation
+used the next episode's reset value and let its advantage flow backward.
+`collect_rollout` now retains the actual post-step value before reset, and
+`compute_gae_transitions` uses separate bootstrap and trace masks. True failure
+blocks both. External timeout bootstraps but stops the trace. The seven-array
+legacy adapter still exists with explicitly documented reward augmentation;
+its gamma must match the unchanged GAE caller. The new training path uses the
+unambiguous transition API instead.
+
+Ten GAE fixtures include four complete actual trajectories and six labeled
+boundary controls. Inspect all 186 transition rows and every residual's credit
+contribution. Sixteen PPO fixtures expose the advantage-sign-dependent clip
+branch, all loss terms and output gradients. All 57 finite-difference stencils
+are shown, including four clip-kink stencils with both one-sided slopes rather
+than a false central-gradient guarantee. Strict editable JSON stays in the page.
+
+```bash
+python -m ppolab.audit gae --input examples/gae.json
+python -m ppolab.audit ppo --input examples/ppo.json
+node --test tests/*.cjs
+bash examples/verify_wheel.sh
+```
+
+50 Python tests retain all 18 original tests, checkpoint and original artifacts.
+Four Node/actual-Chrome tests check 26 complete reports/12,408 numeric values,
+all 14,871 original observations for one-step network/physics agreement,
+all 30 free-running selectors, contribution rows, four JSON exports, invalid
+state clearing, keyboard controls and 320/390/1280 layouts. An independent
+80-digit Decimal sum checks GAE; the unchanged NumPy loss checks all scalar
+PPO derivatives. Installed reproduction checks eight module origins and runs
+both JSON commands and the real training CLI outside the source checkout.
+
+The corrected seed-0 full rerun reproduced the historical final return display,
+but that single run is not evidence of better training or a speed benchmark.
+No original checkpoint or measured result was replaced. PPO/GAE and CartPole
+are standard methods, not new algorithms; clipping is not a hard KL constraint.
+See [BOUNDARIES.md](BOUNDARIES.md) for the exact bug, equations, API/schema,
+sources, numeric tolerances, finite-horizon interpretation and replay limits.
