@@ -1,0 +1,26 @@
+{
+  "actions": [
+    0
+  ],
+  "advantages": [
+    -2.0
+  ],
+  "clip_eps": 0.2,
+  "ent_coef": 0.01,
+  "logits": [
+    [
+      0.0,
+      0.0
+    ]
+  ],
+  "old_logp": [
+    -1.0986122886681096
+  ],
+  "returns": [
+    1.0
+  ],
+  "values": [
+    0.3
+  ],
+  "vf_coef": 0.5
+}
