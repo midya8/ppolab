@@ -28,30 +28,20 @@ def evaluate(net, seed=12345, episodes=20, max_steps=500):
     return float(np.mean(returns)), float(np.std(returns)), returns
 
 
-def rollout(net, env, horizon, rng):
-    obs_buf, act_buf, logp_buf, rew_buf, done_buf, val_buf = [], [], [], [], [], []
-    obs = env.reset()
-    for _ in range(horizon):
-        logits, value, _ = net.forward(obs[None, :])
-        probs = softmax(logits)[0]
-        logp_all = log_softmax(logits)[0]
-        a = int(rng.choice(2, p=probs))
-        next_obs, r, terminated, truncated = env.step(a)
-        obs_buf.append(obs)
-        act_buf.append(a)
-        logp_buf.append(logp_all[a])
-        val_buf.append(value[0])
-        rew_buf.append(r)
-        # true failure terminates (no bootstrap); time-limit truncation bootstraps
-        done_buf.append(terminated)
-        obs = next_obs
-        if terminated or truncated:
-            # if truncated, next_value at rollout end uses value of the fresh state
-            obs = env.reset()
-    _, last_value, _ = net.forward(obs[None, :])
-    return (np.array(obs_buf), np.array(act_buf), np.array(logp_buf, dtype=float),
-            np.array(rew_buf, dtype=float), np.array(done_buf, dtype=bool),
-            np.array(val_buf, dtype=float), float(last_value[0]))
+def rollout(net, env, horizon, rng, gamma=0.99):
+    """Compatible seven-array adapter with corrected reset boundaries.
+
+    Returned rewards add gamma*V(actual final state) at truncation only;
+    returned dones cut BOTH resets. Feed these into legacy compute_gae.
+    Raw environment rewards/flags live in boundaries.collect_rollout.
+    gamma must match compute_gae's gamma. Training uses explicit transitions.
+    """
+    from .boundaries import collect_rollout
+    b = collect_rollout(net, env, horizon, rng)
+    rewards = b["rewards"] + gamma * b["next_values"] * b["truncated"]
+    done = b["terminated"] | b["truncated"]
+    return (b["observations"], b["actions"], b["old_logp"], rewards, done,
+            b["values"], float(b["next_values"][-1]))
 
 
 def update(net, opt, obs, act, logp_old, adv, ret, clip_eps=0.2, vf_coef=0.5,
@@ -131,8 +121,11 @@ def main():
     curve = []
     t0 = time.time()
     for it in range(1, args.iters + 1):
-        obs, act, logp_old, rew, done, val, next_val = rollout(net, env, args.horizon, rng)
-        adv, ret = compute_gae(rew, val, done, next_val, gamma=0.99, lam=0.95)
+        from .boundaries import collect_rollout, compute_gae_transitions
+        batch = collect_rollout(net, env, args.horizon, rng)
+        obs, act, logp_old, rew = [batch[k] for k in ("observations", "actions", "old_logp", "rewards")]
+        adv, ret = compute_gae_transitions(rew, batch["values"], batch["next_values"],
+            batch["terminated"], batch["truncated"], gamma=0.99, lam=0.95)
         loss = update(net, opt, obs, act, logp_old, adv, ret, rng=rng)
         if it % 2 == 0 or it == args.iters:
             mean, std, _ = evaluate(net, episodes=10)
