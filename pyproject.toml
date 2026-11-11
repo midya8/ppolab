@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ppolab"
-version = "0.2.0"
+version = "0.3.0"
 description = "PPO from scratch in pure NumPy: clipped objective, GAE, and a CartPole built from first principles"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -19,6 +19,8 @@ where = ["src"]
 
 [project.scripts]
 ppo-audit = "ppolab.audit:main"
+ppo-clip-face = "ppolab.clipface:main"
+ppo-clip-verify = "ppolab.clipverify:main"
 
 [tool.setuptools.package-data]
 ppolab = ["data/*.json"]
