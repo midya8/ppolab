@@ -94,3 +94,22 @@ No original checkpoint or measured result was replaced. PPO/GAE and CartPole
 are standard methods, not new algorithms; clipping is not a hard KL constraint.
 See [BOUNDARIES.md](BOUNDARIES.md) for the exact bug, equations, API/schema,
 sources, numeric tolerances, finite-horizon interpretation and replay limits.
+
+
+## v0.3: clipping is not a policy box
+
+[Open the exact policy-face inspector](https://midya8.github.io/ppolab/clip.html) · [Proof, schema, sources and limits](CLIP_FACE.md)
+
+A separate exact-rational optimizer exposes **every** optimal policy of a supplied single-state categorical PPO clipped surrogate, not just one update. Supporting-line dual bounds meet explicit witnesses. A separate verifier enumerates every piecewise cell's vertices without importing the optimizer, and an independently written BigInt browser engine reproduces the complete reports. Exact coordinate ranges, all face vertices, nearest/farthest total-variation witnesses and positive-support limits remain visible.
+
+For the centered control p=(1/10,9/10), A=(9,-1), epsilon=1/5, the actual clipped-objective optimum is 9/25. Adding a real hard ratio box reduces it to 1/5. The unconstrained optimal face has q0 in [7/25,1], TV from 9/50 to 9/10, and a strictly positive optimal family with unbounded old-to-new KL as it approaches a zero-support vertex. No rounded logarithms are used as exact evidence. A forced-zero control separately shows that some problems have no fully supported exact optimum.
+
+These are exact full old-policy expectations on 2–6 supplied actions, not sampled minibatches, SGD trajectories, entropy/value losses or new training results. The original trainer, checkpoint, 50 earlier Python tests, four Node/Chrome tests and all earlier audit artifacts remain intact. Clipping/trust-region limitations are established results, not a claimed new discovery.
+
+```bash
+python -m ppolab.clipface input.json > report.json
+python -m ppolab.clipverify report.json
+bash examples/verify_clip_wheel.sh
+```
+
+The current suite has 64 Python tests and seven Node/actual-Chrome tests. The added tests cover 351 exhaustive signed-advantage reports at three clipping widths, independent cell enumeration, exact simplex-grid controls, all-leaf tampering, strict APIs/CLIs and the unchanged original NumPy loss with correctly old-probability-weighted batches. Actual Chrome visits all 135 policy states, 60 responsive layouts and 2,658 exact policy table cells, invalidates stale results on trusted editing, and downloads two real JSON Blobs for native regeneration and independent replay.
