@@ -43,3 +43,4 @@ jobs:
           python-version: '3.11'
       - run: pip install numpy matplotlib pillow setuptools wheel
       - run: bash examples/verify_wheel.sh
+      - run: bash examples/verify_clip_wheel.sh
