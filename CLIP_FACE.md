@@ -1,6 +1,6 @@
-# PPO-Clip: exact optimal-policy faces
+# Exact optimal policies for a clipped PPO objective
 
-This extension audits the **single-state full old-policy expectation** of the standard clipped PPO surrogate. It does not replace the original trainer, checkpoint, CartPole evaluation, boundary inspector or GAE implementation. Those retain their original numerical semantics.
+This extension audits the single-state full old-policy expectation of the standard clipped PPO surrogate. It does not replace the original trainer, checkpoint, CartPole evaluation, boundary inspector or GAE implementation. Those retain their original numerical semantics.
 
 ## The question
 
@@ -36,7 +36,7 @@ The report solves this same objective twice:
 1. `simplex`: only probability nonnegativity and normalization.
 2. `ratio_box`: additionally `(1-e)p_i <= q_i <= (1+e)p_i`, with upper endpoints capped at one.
 
-The second domain is a real hard ratio constraint, **not** an alternative interpretation of the first objective. The exact objective gap is reported, including zero when the constraint does not reduce the optimum.
+The second domain is a real hard ratio constraint, not an alternative interpretation of the first objective. The exact objective gap is reported, including zero when the constraint does not reduce the optimum.
 
 ## Exact dual and complete face
 
@@ -50,7 +50,7 @@ Every feasible normalized q satisfies `F(q) <= lambda + sum h_i`. The producer s
 
 For a multiplier whose coordinate argmax intervals `[L_i,U_i]` satisfy `sum L_i <= 1 <= sum U_i`, normalized mass can be assigned within those intervals. This attains the bound, proving global optimality exactly.
 
-It also describes **all** optimizers, not just one: each coordinate supporting gap is nonnegative, and their sum is the total dual gap. A feasible policy attains the bound if and only if every coordinate gap vanishes. Consequently the complete optimal face is
+It also describes all optimizers, rather than one: each coordinate supporting gap is nonnegative, and their sum is the total dual gap. A feasible policy attains the bound if and only if every coordinate gap vanishes. Consequently the complete optimal face is
 
 ```
 L_i <= q_i <= U_i for every i, and sum q_i = 1.
@@ -97,7 +97,7 @@ If both a zero-coordinate optimal vertex z and a positive optimal centroid c exi
 q(t) = (1-t) z + t c,  0 < t <= 1
 ```
 
-is positive and optimal by convexity of the face. For a zero coordinate of z, `q_i(t)=t c_i`, so `p_i log(p_i/q_i(t))` diverges as t decreases to zero. Other coordinate contributions have finite lower bounds. Thus old-to-new KL is unbounded even **among strictly positive exact optimizers**. Three rational members are included, but the unboundedness argument concerns the whole family, not a finite log table.
+is positive and optimal by convexity of the face. For a zero coordinate of z, `q_i(t)=t c_i`, so `p_i log(p_i/q_i(t))` diverges as t decreases to zero. Other coordinate contributions have finite lower bounds. Thus old-to-new KL is unbounded even among strictly positive exact optimizers. Three rational members are included, but the unboundedness argument concerns the whole family, not a finite log table.
 
 If some action has effective maximum zero, no positive exact optimum exists. The report distinguishes this empty full-support set from an unbounded positive-optimum family. Finite softmax logits cannot attain a zero probability; a closed-simplex optimum is not automatically an attainable finite-network parameter update.
 
@@ -174,6 +174,6 @@ Sources read for this extension:
 3. Wang, He and Tan (2020), [Truly Proximal Policy Optimization](https://proceedings.mlr.press/v115/wang20b.html). Existing work on ratio/trust-region limitations; its proposed algorithm and experiments are not implemented here.
 4. Engstrom et al. (2020), [Implementation Matters in Deep Policy Gradients](https://arxiv.org/abs/2005.12729). Objective versus optimizer/code-level effects; no reproduction of its training results claimed.
 5. Sun et al. (2022), [You May Not Need Ratio Clipping in PPO](https://arxiv.org/html/2202.00079). Existing ratio/TV and early-stopping analysis; ESPO is not implemented here.
-6. Markowitz and Staley (2023), [Clipped-Objective Policy Gradients for Pessimistic Policy Optimization](https://arxiv.org/abs/2311.05846), Section 3.2. PPO objective attribution, not implementation of COPG.
+6. Markowitz and Staley (2023), [Clipped-Objective Policy Gradients for Pessimistic Policy Optimization](https://arxiv.org/abs/2311.05846), Section 3.3. PPO objective attribution, not implementation of COPG.
 
 This source list is attribution, not endorsement. The exact finite optimizer, supporting witnesses, counterexample controls, independent replay and UI are this project's engineering contribution.
