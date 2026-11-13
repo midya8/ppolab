@@ -1,8 +1,16 @@
 # ppolab
 
-Proximal Policy Optimization, from scratch, in pure NumPy. No PyTorch, no JAX, no gym: the clipped surrogate objective, GAE(lambda), Adam, and the CartPole environment itself are all implemented from first principles, with every gradient checked against finite differences and every estimator checked against a brute-force reference.
+A NumPy implementation of Proximal Policy Optimization for CartPole, including
+the clipped surrogate, GAE(lambda), Adam and the environment equations. The
+network and loss use handwritten gradients checked by finite differences.
+Separate inspectors audit episode boundaries and the exact optimal policy
+family for a supplied single-state clipped objective. No PyTorch, JAX or gym.
 
-## What's inside
+The current suite has 64 Python tests and seven Node/actual-Chrome tests.
+The original 18-test training suite and the 50-test boundary-audit stage
+are included; their historical counts are described separately below.
+
+## Training code
 
 - `src/ppolab/cartpole.py`: the classic cart-pole task written from the equations of motion (Euler integration, same constants as the standard benchmark). Termination is a real pole failure; hitting the 500-step time limit is a truncation that still bootstraps, and the two are kept apart because mixing them is a classic silent bug in RL code.
 - `src/ppolab/nets.py`: a shared-trunk actor-critic MLP (4 -> 64 -> 64) with hand-written backprop through both heads.
@@ -10,19 +18,21 @@ Proximal Policy Optimization, from scratch, in pure NumPy. No PyTorch, no JAX, n
 - `src/ppolab/optim.py`: Adam.
 - `src/ppolab/train.py`: the full loop: rollouts, advantage normalization, 10 epochs of minibatch updates, greedy evaluation, early stop on solve.
 
-## Honest results
+## Recorded seed-0 run
 
-A single run (seed 0, 60-iteration cap, early stop on solve) reached mean greedy eval return **499.8 ± 0.6 over 10 episodes at iteration 12** and finished with **493.6 ± 27.7 over 20 episodes** (max is 500). Training took about 4 seconds of CPU time. Nothing here is tuned to flatter itself: the final 20-episode number is reported as measured, including the couple of episodes where the still-imperfect policy dropped the pole late.
+A single run (seed 0, 60-iteration cap, early stop on solve) reached mean greedy eval return **499.8 ± 0.6 over 10 episodes at iteration 12** and finished with **493.6 ± 27.7 over 20 episodes** (max is 500). The historical run recorded about 4 seconds of CPU time in its environment,
+not a portable speed benchmark. The final evaluation includes late failures.
+One seed does not establish typical training performance.
 
 ![learning curve](assets/learning_curve.png)
 
-The trained checkpoint ships in `assets/policy.npz`, and the test suite loads it and requires it to hold the pole for a mean of at least 400 steps, so the repo's headline claim is enforced by CI, not asserted in prose.
+The trained checkpoint ships in `assets/policy.npz`, and the test suite loads it and requires it to hold the pole for a mean of at least 400 steps, as a regression check on that checkpoint. This does not measure fresh-training success rates.
 
 ![demo](assets/cartpole_demo.gif)
 
-## Verification, not vibes
+## Original training checks
 
-The test suite (18 tests, all passing) does the work prose can't:
+The original 18-test suite checks:
 
 - **Finite-difference gradient checks** on the full PPO loss (per-logit, per-value) and on every parameter of the actor-critic network end to end.
 - **Brute-force GAE reference**: advantages match an explicit discounted sum of TD residuals, including rollouts cut by terminations mid-way.
@@ -35,18 +45,22 @@ The test suite (18 tests, all passing) does the work prose can't:
 ```bash
 pip install numpy matplotlib pillow pytest
 PYTHONPATH=src python -m pytest -q           # verification incl. the trained checkpoint
-PYTHONPATH=src python -m ppolab.train --iters 60 --out assets   # retrain (~4s, CPU)
+PYTHONPATH=src python -m ppolab.train --iters 60 --out assets   # retrain on CPU
 ```
 
-## Why it's interesting
+## Training, boundary audits and exact policy faces
 
-Most from-scratch PPO write-ups stop at "it works". This repo makes the parts that usually stay implicit explicit and testable: the difference between termination and time-limit truncation in bootstrapping, where the clipped objective's gradient actually flows (and where it deliberately doesn't), and what GAE(lambda) does to credit assignment across episode boundaries. Every one of those behaviors has a test that would catch the standard implementation mistake.
+The trainer updates a neural policy on sampled rollouts. The boundary inspector
+separately replays transition/advantage arithmetic and scalar loss gradients.
+The policy-face inspector solves a supplied single-state categorical objective
+exactly; it is not a neural training trajectory or a hard trust-region update.
+The sections below describe the boundary fix and each inspector's limits.
 
 ## License
 
 MIT
 
-## v0.2: boundary fix and independent browser audit
+## Episode-boundary fix and browser audit
 
 The [live boundary inspector](https://midya8.github.io/ppolab/) computes the
 entire shipped network and CartPole physics in scalar JavaScript. Replay all
@@ -79,8 +93,9 @@ node --test tests/*.cjs
 bash examples/verify_wheel.sh
 ```
 
-50 Python tests retain all 18 original tests, checkpoint and original artifacts.
-Four Node/actual-Chrome tests check 26 complete reports/12,408 numeric values,
+The boundary-audit stage had 50 Python tests, including all 18 original tests,
+and retained the checkpoint and original artifacts.
+Its four Node/actual-Chrome tests check 26 complete reports/12,408 numeric values,
 all 14,871 original observations for one-step network/physics agreement,
 all 30 free-running selectors, contribution rows, four JSON exports, invalid
 state clearing, keyboard controls and 320/390/1280 layouts. An independent
@@ -96,13 +111,13 @@ See [BOUNDARIES.md](BOUNDARIES.md) for the exact bug, equations, API/schema,
 sources, numeric tolerances, finite-horizon interpretation and replay limits.
 
 
-## v0.3: clipping is not a policy box
+## Exact clipped-objective policy faces
 
 [Open the exact policy-face inspector](https://midya8.github.io/ppolab/clip.html) · [Proof, schema, sources and limits](CLIP_FACE.md)
 
-A separate exact-rational optimizer exposes **every** optimal policy of a supplied single-state categorical PPO clipped surrogate, not just one update. Supporting-line dual bounds meet explicit witnesses. A separate verifier enumerates every piecewise cell's vertices without importing the optimizer, and an independently written BigInt browser engine reproduces the complete reports. Exact coordinate ranges, all face vertices, nearest/farthest total-variation witnesses and positive-support limits remain visible.
+A separate exact-rational optimizer exposes every optimal policy of a supplied single-state categorical PPO clipped surrogate, rather than one update. Supporting-line dual bounds meet explicit witnesses. A separate verifier enumerates every piecewise cell's vertices without importing the optimizer, and an independently written BigInt browser engine reproduces the complete reports. Exact coordinate ranges, all face vertices, nearest/farthest total-variation witnesses and positive-support limits remain visible.
 
-For the centered control p=(1/10,9/10), A=(9,-1), epsilon=1/5, the actual clipped-objective optimum is 9/25. Adding a real hard ratio box reduces it to 1/5. The unconstrained optimal face has q0 in [7/25,1], TV from 9/50 to 9/10, and a strictly positive optimal family with unbounded old-to-new KL as it approaches a zero-support vertex. No rounded logarithms get passed off as exact values. A forced-zero control separately shows that some problems have no fully supported exact optimum.
+For the centered control p=(1/10,9/10), A=(9,-1), epsilon=1/5, the actual clipped-objective optimum is 9/25. Adding a real hard ratio box reduces it to 1/5. The unconstrained optimal face has q0 in [7/25,1], TV from 9/50 to 9/10, and a strictly positive optimal family with unbounded old-to-new KL as it approaches a zero-support vertex. KL claims use support arguments, not rounded logarithms. A forced-zero control separately shows that some problems have no fully supported exact optimum.
 
 These are exact full old-policy expectations on 2–6 supplied actions, not sampled minibatches, SGD trajectories, entropy/value losses or new training results. The original trainer, checkpoint, 50 earlier Python tests, four Node/Chrome tests and all earlier audit artifacts remain intact. Clipping/trust-region limitations are established results, not a claimed new discovery.
 
